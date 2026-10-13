@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>music-sync</h1>
+<p class="sub">Copy or merge playlists between Spotify, YouTube Music and Apple Music, in any direction.</p>
+
+<div class="card">
+  <h2>Services</h2>
+  <div class="grid3">
+    {% for s in services %}
+    <div class="svc" style="--c: var(--{{ s.name }})">
+      <div class="name">{{ s.display_name }}</div>
+      {% if s.connected %}
+        <span class="pill ok">connected</span>
+      {% else %}
+        <span class="pill no">not connected</span>
+      {% endif %}
+      <div>
+        {% if s.configured %}
+          <a class="btn {% if s.connected %}ghost{% endif %}" href="/auth/{{ s.name }}">{{ "Reconnect" if s.connected else "Connect" }}</a>
+        {% elif s.name == "youtube" %}
+          <a class="btn {% if s.connected %}ghost{% endif %}" href="/auth/youtube">{{ "Reconnect" if s.connected else "Connect" }}</a>
+        {% else %}
+          <span class="muted">Add API keys to <code>.env</code> first (see README).</span>
+        {% endif %}
+      </div>
+      {% if not s.supports_removal %}<p class="muted">Add-only: its API can't remove songs.</p>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="card">
+  <h2>Sync</h2>
+  <div class="row">
+    <label>From <select id="source">
+      {% for s in services %}<option value="{{ s.name }}">{{ s.display_name }}</option>{% endfor %}
+    </select></label>
+    <button class="btn ghost" id="swap" title="Swap direction">&#8646;</button>
+    <label>To <select id="target">
+      {% for s in services %}<option value="{{ s.name }}" {% if loop.index == 2 %}selected{% endif %}>{{ s.display_name }}</option>{% endfor %}
+    </select></label>
+    <button class="btn ghost" id="load">Load playlists</button>
+  </div>
+
+  <div class="list" id="playlists"><label class="disabled"><span class="muted">Pick a source and load its playlists.</span></label></div>
+
+  <div class="row">
+    <label><input type="radio" name="mode" value="one" checked> One-way (source &rarr; target)</label>
+    <label><input type="radio" name="mode" value="two"> Two-way (merge both)</label>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <label><input type="checkbox" id="delete"> Also remove songs <span class="muted">(one-way: mirror the source; two-way: carry removals across)</span></label>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <label><input type="checkbox" id="dry_run"> Dry run (don't change anything)</label>
+    <input type="text" id="target_name" placeholder="Target playlist name (optional, single playlist)" style="flex:1; min-width:240px">
+  </div>
+  <p><button class="btn" id="run">Sync</button> <span id="runStatus" class="muted"></span></p>
+  <div id="results"></div>
+  <pre class="log" id="log" hidden></pre>
+</div>
+
+<div class="card">
+  <h2>Linked playlists</h2>
+  <div id="links" class="muted">Loading&hellip;</div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const names = { spotify: "Spotify", youtube: "YouTube Music", apple: "Apple Music" };
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+$("swap").onclick = () => { const s = $("source").value; $("source").value = $("target").value; $("target").value = s; loadPlaylists(); };
+$("source").onchange = loadPlaylists;
+$("load").onclick = loadPlaylists;
+
+async function loadPlaylists() {
+  const list = $("playlists");
+  list.innerHTML = '<label class="disabled"><span class="muted">Loading…</span></label>';
+  const res = await fetch(`/api/playlists/${$("source").value}`);
+  const data = await res.json();
+  if (!res.ok) {
+    list.innerHTML = `<label class="disabled"><span class="bad">${esc(data.error)}</span></label>`;
+    return;
+  }
+  if (!data.length) { list.innerHTML = '<label class="disabled"><span class="muted">No playlists.</span></label>'; return; }
+  list.innerHTML = data.map((p) => `
+    <label class="${p.readable ? "" : "disabled"}" title="${p.readable ? "" : "Spotify only shares the contents of playlists you own or collaborate on"}">
+      <input type="checkbox" value="${esc(p.id)}" ${p.readable ? "" : "disabled"}>
+      <span>${esc(p.name)}</span>
+      <span class="count">${p.track_count ?? ""}</span>
+    </label>`).join("");
+}
+
+$("run").onclick = async () => {
+  const playlists = [...document.querySelectorAll("#playlists input:checked")].map((c) => c.value);
+  const body = {
+    source: $("source").value, target: $("target").value, playlists,
+    two_way: document.querySelector("input[name=mode]:checked").value === "two",
+    delete: $("delete").checked, dry_run: $("dry_run").checked, target_name: $("target_name").value.trim(),
+  };
+  if (body.source === body.target) { $("runStatus").textContent = "Pick two different services."; return; }
+  if (!playlists.length) { $("runStatus").textContent = "Tick at least one playlist."; return; }
+  if (body.target_name && playlists.length > 1) { $("runStatus").textContent = "A target name only works with one playlist."; return; }
+  $("run").disabled = true;
+  $("results").innerHTML = "";
+  $("log").hidden = false;
+  $("log").textContent = "";
+  const res = await fetch("/api/sync", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const job = await res.json();
+  if (!res.ok) { $("runStatus").textContent = job.error; $("run").disabled = false; return; }
+  poll(job.id);
+};
+
+async function poll(id) {
+  const job = await (await fetch(`/api/jobs/${id}`)).json();
+  $("runStatus").textContent = job.status === "failed" ? `Failed: ${job.error}` : job.status;
+  $("log").textContent = job.log.join("\n");
+  $("log").scrollTop = $("log").scrollHeight;
+  if (job.status === "queued" || job.status === "running") { setTimeout(() => poll(id), 1000); return; }
+  $("run").disabled = false;
+  $("results").innerHTML = job.reports.map((r) => `
+    <div class="report">
+      <div><strong>${esc(r.summary)}</strong></div>
+      ${r.warnings.map((w) => `<div class="warn">${esc(w)}</div>`).join("")}
+      ${r.unmatched.length ? `<details><summary class="muted">${r.unmatched.length} not found</summary>${r.unmatched.map((t) => `<div class="muted">${esc(t)}</div>`).join("")}</details>` : ""}
+    </div>`).join("");
+  loadLinks();
+}
+
+async function loadLinks() {
+  const links = await (await fetch("/api/links")).json();
+  $("links").innerHTML = links.length
+    ? links.map((l) => `<div>${names[l.a.service]} <code>${esc(l.a.id)}</code> &harr; ${names[l.b.service]} <code>${esc(l.b.id)}</code>
+        <span class="muted">· ${l.pairs.length} songs · ${esc(l.last_synced)}</span></div>`).join("")
+    : "None yet. Playlists get linked after their first sync, so later syncs update the same playlist.";
+}
+loadLinks();
+</script>
+{% endblock %}

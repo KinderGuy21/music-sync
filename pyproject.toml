@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "music-sync"
+version = "0.1.0"
+description = "Sync playlists between Spotify, YouTube Music and Apple Music in any direction"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "click>=8.1",
+    "flask>=3.0",
+    "pyjwt[crypto]>=2.8",
+    "python-dotenv>=1.0",
+    "rapidfuzz>=3.0",
+    "requests>=2.31",
+    "spotipy>=2.26",
+    "ytmusicapi>=1.10",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+music-sync = "music_sync.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["music_sync*"]
+
+[tool.setuptools.package-data]
+"music_sync.web" = ["templates/*.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

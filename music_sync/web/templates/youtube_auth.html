@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Connect YouTube Music{% endblock %}
+{% block body %}
+<h1>Connect YouTube Music</h1>
+<p class="sub"><a href="/">&larr; back</a></p>
+
+<div class="card">
+  <h2>Option 1: Google sign-in (OAuth)</h2>
+  {% if code %}
+    <p>Open <a href="{{ code.url }}" target="_blank" rel="noopener">{{ code.verification_url }}</a>
+       and enter this code, then approve access:</p>
+    <p><code class="big">{{ code.user_code }}</code></p>
+    <form method="post" action="/auth/youtube/finish">
+      <input type="hidden" name="device_code" value="{{ code.device_code }}">
+      <button class="btn" type="submit">I've approved it</button>
+    </form>
+  {% elif error %}
+    <p class="bad">{{ error }}</p>
+  {% else %}
+    <p class="muted">Set <code>YTMUSIC_CLIENT_ID</code> and <code>YTMUSIC_CLIENT_SECRET</code>
+      (a Google Cloud OAuth client of type "TVs and Limited Input devices", with the YouTube Data API enabled)
+      to use this, or use option 2.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Option 2: Browser headers</h2>
+  <p class="muted">In a tab logged in to <a href="https://music.youtube.com" target="_blank" rel="noopener">music.youtube.com</a>,
+    open DevTools &rarr; Network, filter for <code>browse</code>, click a POST request, and copy its
+    <em>request headers</em> (Firefox: "Copy Request Headers"; Chrome: the raw request headers). Paste them here.</p>
+  <form method="post" action="/auth/youtube/headers">
+    <textarea name="headers" placeholder="accept: */*&#10;authorization: SAPISIDHASH ...&#10;cookie: ..." required></textarea>
+    <p><button class="btn" type="submit">Save headers</button></p>
+  </form>
+</div>
+{% endblock %}
