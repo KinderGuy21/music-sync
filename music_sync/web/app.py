@@ -137,7 +137,9 @@ def create_app(settings: Settings | None = None) -> Flask:
         target = resolve_service(body["target"])
         if source == target:
             return jsonify(error="Source and target must be different services"), 400
-        playlist_ids = body.get("playlists") or []
+        # Ticked playlist ids and/or pasted share links (e.g. a public Spotify playlist).
+        playlist_ids = [providers[source].parse_playlist_ref(p) or p.strip()
+                        for p in body.get("playlists") or [] if p.strip()]
         if not playlist_ids:
             return jsonify(error="Pick at least one playlist"), 400
         job_id = uuid.uuid4().hex[:10]

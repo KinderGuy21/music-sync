@@ -2,11 +2,13 @@
 
 Uses the post-February-2026 endpoints (/me/playlists, /playlists/{id}/items),
 which spotipy >= 2.26 calls. Spotify only returns the contents of playlists
-you own or collaborate on.
+you own or collaborate on; other public playlists, and every playlist when
+nobody has signed in, are read through spotify_public (no login needed).
 """
 
 from __future__ import annotations
 
+import requests
 import spotipy
 from spotipy.cache_handler import CacheFileHandler
 from spotipy.oauth2 import SpotifyOAuth
@@ -14,6 +16,7 @@ from spotipy.oauth2 import SpotifyOAuth
 from ..config import Settings
 from ..models import Playlist, Track
 from .base import NotAuthenticated, Provider, ProviderError
+from .spotify_public import PublicPlaylist, PublicSpotifyReader, api_track, parse_playlist_id
 
 SCOPES = " ".join([
     "playlist-read-private",
@@ -28,11 +31,15 @@ class SpotifyProvider(Provider):
     display_name = "Spotify"
     supports_removal = True
     supports_isrc_lookup = True
+    reads_public_links = True
 
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Settings, http: requests.Session | None = None):
         self.settings = settings
         self._client: spotipy.Spotify | None = None
         self._me: dict | None = None
+        self._reader = PublicSpotifyReader(settings.spotify_client_id, settings.spotify_client_secret, http)
+        self._public: dict[str, PublicPlaylist] = {}
+        self._notices: list[str] = []
 
     # --- auth --------------------------------------------------------------
 
@@ -69,25 +76,38 @@ class SpotifyProvider(Provider):
     def client(self) -> spotipy.Spotify:
         if self._client is None:
             if not self.is_authenticated():
-                raise NotAuthenticated("Spotify is not connected. Run: music-sync auth spotify")
+                raise NotAuthenticated("Spotify is not connected. Run `music-sync auth spotify`, "
+                                       "or give a public playlist's link or id instead")
             self._client = spotipy.Spotify(auth_manager=self.oauth(open_browser=False), retries=3)
         return self._client
 
     # --- reading -----------------------------------------------------------
 
-    @staticmethod
-    def _to_track(item: dict) -> Track | None:
-        if not item or item.get("type", "track") != "track" or not item.get("id"):
-            return None  # episodes, local files, removed tracks
-        return Track(
-            id=item["id"],
-            title=item.get("name", ""),
-            artists=[a["name"] for a in item.get("artists", [])],
-            album=(item.get("album") or {}).get("name"),
-            duration_ms=item.get("duration_ms"),
-            isrc=(item.get("external_ids") or {}).get("isrc"),
-            service="spotify",
-        )
+    _to_track = staticmethod(api_track)
+
+    def parse_playlist_ref(self, ref: str) -> str | None:
+        return parse_playlist_id(ref)
+
+    def take_notices(self) -> list[str]:
+        notices, self._notices = self._notices, []
+        return notices
+
+    def public_playlist(self, playlist_id: str) -> PublicPlaylist:
+        """A public playlist read without a user login (cached for this run)."""
+        if playlist_id not in self._public:
+            self._public[playlist_id] = self._reader.read(playlist_id)
+        return self._public[playlist_id]
+
+    def get_playlist(self, playlist_id: str) -> Playlist | None:
+        if not self.is_authenticated():
+            return self.public_playlist(playlist_id).playlist
+        found = super().get_playlist(playlist_id)
+        if found or not parse_playlist_id(playlist_id):
+            return found
+        try:  # someone else's public playlist
+            return self.public_playlist(playlist_id).playlist
+        except ProviderError:
+            return None
 
     def _pages(self, page: dict):
         while page:
@@ -109,11 +129,27 @@ class SpotifyProvider(Provider):
                 description=p.get("description") or "",
                 track_count=counts.get("total"),
                 service=self.name,
-                readable=bool(owned),
+                # Public playlists you don't own are read the no-login way (first 100 songs).
+                readable=bool(owned or p.get("public")),
             ))
         return out
 
     def get_tracks(self, playlist_id: str) -> list[Track]:
+        if not self.is_authenticated():
+            return self._public_tracks(playlist_id)
+        try:
+            return self._own_tracks(playlist_id)
+        except spotipy.SpotifyException as exc:
+            if exc.http_status not in (403, 404):
+                raise
+            return self._public_tracks(playlist_id)  # not yours: read it like anyone else would
+
+    def _public_tracks(self, playlist_id: str) -> list[Track]:
+        public = self.public_playlist(playlist_id)
+        self._notices += public.notices
+        return list(public.tracks)
+
+    def _own_tracks(self, playlist_id: str) -> list[Track]:
         tracks = []
         for entry in self._pages(self.client.playlist_items(playlist_id, limit=50, additional_types=("track",))):
             # Feb 2026 renamed entry["track"] to entry["item"]; accept both.

@@ -54,3 +54,20 @@ def test_same_service_rejected(client):
     c, _ = client
     res = c.post("/api/sync", json={"source": "apple", "target": "apple", "playlists": ["x"]})
     assert res.status_code == 400
+
+
+def test_sync_a_pasted_playlist_link(client):
+    c, fakes = client
+    pid = next(iter(fakes["spotify"].playlists))
+    fakes["spotify"].parse_playlist_ref = lambda ref: pid if ref.startswith("https://") else None
+
+    job = c.post("/api/sync", json={"source": "spotify", "target": "youtube",
+                                    "playlists": ["https://open.spotify.com/playlist/x?si=y"]}).get_json()
+    for _ in range(50):
+        status = c.get(f"/api/jobs/{job['id']}").get_json()
+        if status["status"] in ("done", "failed"):
+            break
+        time.sleep(0.05)
+
+    assert status["status"] == "done", status
+    assert status["reports"][0]["source_playlist"] == "Night Drive"

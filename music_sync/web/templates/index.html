@@ -23,6 +23,7 @@
           <span class="muted">Add API keys to <code>.env</code> first (see README).</span>
         {% endif %}
       </div>
+      {% if s.name == "spotify" and not s.connected %}<p class="muted">Public playlist links work as a source without connecting.</p>{% endif %}
       {% if not s.supports_removal %}<p class="muted">Add-only: its API can't remove songs.</p>{% endif %}
     </div>
     {% endfor %}
@@ -43,6 +44,9 @@
   </div>
 
   <div class="list" id="playlists"><label class="disabled"><span class="muted">Pick a source and load its playlists.</span></label></div>
+  <div class="row" style="margin:8px 0 14px">
+    <input type="text" id="link" placeholder="Or paste a playlist link, e.g. a public Spotify playlist (no Spotify login needed)" style="flex:1; min-width:240px">
+  </div>
 
   <div class="row">
     <label><input type="radio" name="mode" value="one" checked> One-way (source &rarr; target)</label>
@@ -94,13 +98,14 @@ async function loadPlaylists() {
 
 $("run").onclick = async () => {
   const playlists = [...document.querySelectorAll("#playlists input:checked")].map((c) => c.value);
+  if ($("link").value.trim()) playlists.push($("link").value.trim());
   const body = {
     source: $("source").value, target: $("target").value, playlists,
     two_way: document.querySelector("input[name=mode]:checked").value === "two",
     delete: $("delete").checked, dry_run: $("dry_run").checked, target_name: $("target_name").value.trim(),
   };
   if (body.source === body.target) { $("runStatus").textContent = "Pick two different services."; return; }
-  if (!playlists.length) { $("runStatus").textContent = "Tick at least one playlist."; return; }
+  if (!playlists.length) { $("runStatus").textContent = "Tick a playlist or paste a link."; return; }
   if (body.target_name && playlists.length > 1) { $("runStatus").textContent = "A target name only works with one playlist."; return; }
   $("run").disabled = true;
   $("results").innerHTML = "";
