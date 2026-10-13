@@ -23,6 +23,8 @@ class Provider(ABC):
     supports_removal: bool = True
     #: Whether search results carry ISRCs, so matching can be exact.
     supports_isrc_lookup: bool = False
+    #: Whether a share link opens a playlist without signing in (public Spotify playlists).
+    reads_public_links: bool = False
 
     @abstractmethod
     def is_authenticated(self) -> bool:
@@ -49,6 +51,14 @@ class Provider(ABC):
 
     def remove_tracks(self, playlist_id: str, tracks: list[Track]) -> None:
         raise ProviderError(f"{self.display_name} does not allow removing tracks from playlists via its API")
+
+    def parse_playlist_ref(self, ref: str) -> str | None:
+        """The playlist id in a share link or URI for this service, or None if ``ref`` isn't one."""
+        return None
+
+    def take_notices(self) -> list[str]:
+        """Warnings gathered while reading (e.g. a playlist only partly readable); clears them."""
+        return []
 
     def get_playlist(self, playlist_id: str) -> Playlist | None:
         for playlist in self.list_playlists():

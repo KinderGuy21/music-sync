@@ -35,11 +35,19 @@ def echo_err(msg: str) -> None:
 
 
 def find_playlist(provider: Provider, ref: str) -> Playlist:
-    """Accept a playlist id, an exact name, or an unambiguous part of a name."""
+    """Accept a playlist id, a share link, an exact name, or an unambiguous part of a name."""
+    link_id = provider.parse_playlist_ref(ref)
+    if link_id and provider.reads_public_links and not provider.is_authenticated():
+        return provider.get_playlist(link_id)  # a public playlist: no Spotify login needed
     playlists = provider.list_playlists()
     for p in playlists:
-        if p.id == ref:
+        if p.id == (link_id or ref):
             return p
+    if link_id:
+        found = provider.get_playlist(link_id)  # e.g. someone else's public Spotify playlist
+        if found:
+            return found
+        raise click.ClickException(f"Can't open {provider.display_name} playlist {link_id}")
     exact = [p for p in playlists if p.name.lower() == ref.lower()]
     if len(exact) == 1:
         return exact[0]
@@ -64,6 +72,8 @@ def services(ctx: Context):
     for name, provider in ctx.providers.items():
         ok = provider.is_authenticated()
         status = click.style("connected", fg="green") if ok else click.style("not connected", fg="yellow")
+        if not ok and provider.reads_public_links:
+            status += click.style("  (public playlist links still work as a source)", fg="yellow")
         click.echo(f"{name:8} {provider.display_name:14} {status}")
 
 
@@ -145,12 +155,14 @@ def playlists(ctx: Context, service: str):
 @click.argument("playlist")
 @pass_ctx
 def tracks(ctx: Context, service: str, playlist: str):
-    """List the tracks of a playlist (id or name)."""
+    """List the tracks of a playlist (id, link or name)."""
     provider = ctx.provider(service)
     try:
         for t in provider.get_tracks(find_playlist(provider, playlist).id):
             isrc = f"  [{t.isrc}]" if t.isrc else ""
             click.echo(f"{t.id:24}  {t.label()}{isrc}")
+        for notice in provider.take_notices():
+            click.secho(f"! {notice}", fg="yellow", err=True)
     except (NotAuthenticated, ProviderError) as exc:
         raise click.ClickException(str(exc)) from None
 
@@ -186,6 +198,7 @@ def sync(ctx: Context, source: str, target: str, playlist_refs: tuple[str, ...],
     \b
     Examples:
       music-sync sync --from spotify --to youtube "Road Trip"
+      music-sync sync --from spotify --to youtube https://open.spotify.com/playlist/<id>?si=...
       music-sync sync --from youtube --to apple --all --dry-run
       music-sync sync --from apple --to spotify "Gym" --two-way
     """

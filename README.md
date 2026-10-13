@@ -15,6 +15,9 @@ command line or a small local web page.
   (`מלכת הדור` = `Malkat Hador`). Live, remix, acoustic and cover versions are *not*
   confused with the original, and ISRC codes are used for exact matches where the
   service provides them (Spotify, Apple Music).
+- **No Spotify account needed for public playlists**: paste the link of any public
+  Spotify playlist and copy it to YouTube Music or Apple Music without signing in to
+  Spotify (see [Public Spotify playlists](#public-spotify-playlists-no-spotify-login)).
 - **Remembers** what it matched and which playlists belong together, so re-syncs are fast
   and update the same playlist instead of making duplicates.
 
@@ -33,6 +36,8 @@ cp .env.example .env   # then fill in the keys below
 ## Connecting the services
 
 Each service needs a developer key once, then you sign in with your own account.
+The one exception is reading a *public* Spotify playlist, which needs no Spotify login and
+no keys at all (see below).
 Tokens are stored in `~/.music-sync/` (change with `MUSIC_SYNC_HOME`), never in the repo.
 
 ### Spotify (OAuth)
@@ -46,7 +51,42 @@ Tokens are stored in `~/.music-sync/` (change with `MUSIC_SYNC_HOME`), never in 
 4. `music-sync auth spotify` (or *Connect* in the web UI).
 
 Spotify only returns the songs of playlists you **own or collaborate on**; other people's
-playlists are listed but can't be read. Follow-and-copy them into your own playlist first.
+playlists are listed but can't be read through your login. If they're public, music-sync
+reads them the no-login way described next, automatically.
+
+### Public Spotify playlists (no Spotify login)
+
+For copying **someone else's public playlist** to YouTube Music or Apple Music, e.g. a
+friend who doesn't use Spotify received a Spotify link. This is a one-way, source-only mode:
+nobody signs in to Spotify, so nothing can be written to Spotify, and two-way sync and
+`--all` still need the full login above.
+
+```bash
+music-sync auth youtube --browser      # only the target service needs signing in
+music-sync sync --from spotify --to youtube "https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M?si=4f8a2c9e1b7d4e3a"
+music-sync tracks spotify "https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M?si=..."  # just list the songs
+```
+
+Give the share link as-is (`?si=...` and all), a `spotify:playlist:` URI, or the bare id;
+a playlist *name* only works once you've signed in. In the web UI, paste the link into
+*Or paste a playlist link* instead of loading playlists.
+
+How it reads the playlist, in order:
+
+1. **App-only API access**: if `SPOTIFY_CLIENT_ID` / `SPOTIFY_CLIENT_SECRET` are set,
+   the Client Credentials flow (no user, no redirect URI, no browser) and
+   `GET /v1/playlists/{id}`. Since February 2026 Spotify only gives development-mode apps
+   the *contents* of playlists the caller owns, and an app token owns nothing, so for most
+   apps this yields just the name and description; apps with extended quota get every song,
+   with ISRCs.
+2. **The public playlist page** (`open.spotify.com/embed/playlist/{id}`), the same list
+   anyone sees when they open the link. Needs no keys at all, but carries only the **first
+   100 songs**; for longer playlists music-sync warns how many were skipped. No ISRCs, so
+   matching goes by title, artist and duration.
+
+If the playlist is private or doesn't exist, both fail and music-sync says so: ask the owner
+to make it public, or sign in with `music-sync auth spotify` as an account that owns or
+collaborates on it.
 
 ### YouTube Music (OAuth or browser login)
 
@@ -83,10 +123,11 @@ Check what's connected with `music-sync services`.
 
 ```bash
 music-sync playlists spotify                         # list playlists (id, size, name)
-music-sync tracks youtube "Road Trip"                # songs in a playlist (id or name)
+music-sync tracks youtube "Road Trip"                # songs in a playlist (id, link or name)
 
 # One-way: copy/update a playlist on another service
 music-sync sync --from spotify --to youtube "Road Trip"
+music-sync sync --from spotify --to youtube "https://open.spotify.com/playlist/<id>?si=..."  # public, no Spotify login
 music-sync sync --from youtube --to apple "Road Trip" --target-name "Road Trip (YT)"
 music-sync sync --from apple --to spotify --all      # every playlist
 music-sync sync --from spotify --to apple "Gym" --dry-run   # preview only
@@ -102,7 +143,9 @@ music-sync forget-misses    # retry songs that weren't found last time
 music-sync search apple "bohemian rhapsody queen"
 ```
 
-Playlists can be given by id, exact name, or an unambiguous part of the name.
+Playlists can be given by id, share link (Spotify `open.spotify.com/playlist/...?si=...`,
+YouTube Music `...?list=...`; query strings are fine), exact name, or an unambiguous part
+of the name.
 
 To keep everything in sync automatically, run `music-sync sync-linked` from cron or launchd,
 e.g. hourly: `0 * * * * cd ~/music-sync && .venv/bin/music-sync sync-linked`.
@@ -114,8 +157,8 @@ music-sync web            # http://127.0.0.1:8765
 ```
 
 Connect the services, pick **From** and **To** (the ⇆ button swaps them), load and tick
-playlists, choose one-way or two-way, and press **Sync**. The log streams live and each
-playlist gets a summary listing any songs that weren't found.
+playlists (or paste a playlist link), choose one-way or two-way, and press **Sync**. The
+log streams live and each playlist gets a summary listing any songs that weren't found.
 
 ## How syncing works
 
@@ -158,6 +201,7 @@ music_sync/
   providers/
     base.py           the Provider interface
     spotify.py        Spotify Web API via spotipy
+    spotify_public.py public Spotify playlists without a login (app-only API, public page)
     youtube_music.py  YouTube Music via ytmusicapi
     apple_music.py    Apple Music API + MusicKit developer token
   web/
@@ -178,8 +222,9 @@ pytest
 
 ## Limits worth knowing
 
-- Spotify: search returns at most 10 results per query; only your own/collaborative
-  playlists' contents are readable; development-mode apps are limited to 5 users.
+- Spotify: search returns at most 10 results per query; through your login only your
+  own/collaborative playlists' contents are readable, and other public playlists are read
+  without a login, which stops at their first 100 songs; development-mode apps are limited to 5 users.
 - YouTube Music: unofficial API; no ISRCs, so matching is by title/artist/duration only.
 - Apple Music: add-only (no removals or renames through the API).
 - Songs that don't exist on the target service are listed as "not found" rather than

@@ -179,6 +179,7 @@ class SyncEngine:
         self.log(f"Reading {source.display_name} playlist '{source_playlist.name}'")
         source_tracks = source.get_tracks(source_playlist.id)
         self.log(f"  {len(source_tracks)} tracks")
+        report.warnings += source.take_notices()
 
         tgt_id = self.resolve_target(source, source_playlist, target, target_playlist_id, target_name, report)
         report.target_playlist_id = tgt_id
@@ -273,6 +274,8 @@ class SyncEngine:
 
         ab = DirectionReport(a.display_name, b.display_name, a_playlist.name, b_playlist.name, b_id)
         ba = DirectionReport(b.display_name, a.display_name, b_playlist.name, a_playlist.name, a_playlist.id)
+        ab.warnings += a.take_notices()
+        ba.warnings += b.take_notices()
 
         # 1. Deletions since the last sync.
         remove_from_a: list[Track] = []

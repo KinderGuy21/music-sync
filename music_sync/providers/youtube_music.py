@@ -10,6 +10,7 @@ Two ways to log in:
 from __future__ import annotations
 
 import json
+import re
 
 import ytmusicapi
 from ytmusicapi import OAuthCredentials, YTMusic
@@ -103,6 +104,10 @@ class YouTubeMusicProvider(Provider):
             service="youtube",
             extra=extra,
         )
+
+    def parse_playlist_ref(self, ref: str) -> str | None:
+        m = re.search(r"youtube\.com/.*[?&]list=([\w-]+)", ref)
+        return m.group(1) if m else None
 
     def list_playlists(self) -> list[Playlist]:
         out = []
