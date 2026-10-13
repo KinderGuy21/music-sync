@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>{{ title }}</h1>
+<div class="card">
+  <p>{{ message }}</p>
+  <a class="btn ghost" href="{{ back or '/' }}">Back</a>
+</div>
+{% endblock %}

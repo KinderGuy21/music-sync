@@ -218,3 +218,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# music-sync: credentials and tokens must never be committed
+*.p8
+.cache
+.cache-*
+ytmusic_*.json
+spotify_token.json
+apple_music_user_token.txt
+state.json

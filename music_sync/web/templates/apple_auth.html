@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Connect Apple Music{% endblock %}
+{% block body %}
+<h1>Connect Apple Music</h1>
+<p class="sub"><a href="/">&larr; back</a></p>
+<div class="card">
+  <p>Sign in with your Apple ID to let music-sync read and create playlists in your Apple Music library.
+     You need an active Apple Music subscription.</p>
+  <button class="btn" id="connect" disabled>Loading MusicKit&hellip;</button>
+  <p id="status" class="muted"></p>
+</div>
+
+<script>
+  const statusEl = document.getElementById("status");
+  const button = document.getElementById("connect");
+
+  document.addEventListener("musickitloaded", async () => {
+    try {
+      await MusicKit.configure({
+        developerToken: {{ developer_token | tojson }},
+        app: { name: "music-sync", build: "1.0.0" },
+      });
+      button.disabled = false;
+      button.textContent = "Sign in to Apple Music";
+    } catch (err) {
+      statusEl.textContent = "MusicKit rejected the developer token: " + err;
+      statusEl.className = "bad";
+    }
+  });
+
+  button.addEventListener("click", async () => {
+    try {
+      const token = await MusicKit.getInstance().authorize();
+      const res = await fetch("/auth/apple/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      statusEl.textContent = "Connected. You can close this tab or go back.";
+      statusEl.className = "";
+      setTimeout(() => (window.location.href = "/"), 1200);
+    } catch (err) {
+      statusEl.textContent = "Sign-in didn't complete: " + err;
+      statusEl.className = "bad";
+    }
+  });
+</script>
+<script src="https://js-cdn.music.apple.com/musickit/v3/musickit.js" data-web-components async></script>
+{% endblock %}
