@@ -1,7 +1,7 @@
 /**
  * What this browser remembers, in localStorage (nothing leaves the browser):
  *  - matches: Spotify track id -> the YouTube video chosen for it, or none, so a song is
- *    never searched twice (each search costs 100 units of the shared daily quota);
+ *    never searched twice (and a fallback to the official search, 100 quota units, isn't repeated);
  *  - jobs: Spotify playlist id -> the YouTube playlist made from it and the songs already
  *    added, so a copy cut short (quota, closed tab) carries on instead of starting over.
  */

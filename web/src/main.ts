@@ -116,13 +116,13 @@ async function matchAll(): Promise<void> {
   const progress = $<HTMLProgressElement>("match-progress");
   progress.hidden = false;
   progress.max = todo.length;
-  let done = 0, searches = 0, problem = "";
+  let done = 0, apiSearches = 0, problem = "";
   for (const row of todo) {
     if (stopRequested) break;
     setStatus($("match-status"), `Looking for ${done + 1} of ${todo.length}: ${label(row.track)}`);
     try {
       const m = await yt.findMatch(row.track);
-      searches += m.searches;
+      apiSearches += m.apiSearches;
       row.match = { video: m.video, score: m.score, suggestion: m.suggestion };
       row.include = !!m.video;
       store.setMatch(row.track.id, row.match);
@@ -139,7 +139,8 @@ async function matchAll(): Promise<void> {
   const left = rows.filter((r) => !r.match).length;
   setStatus($("match-status"), problem
     ? `Stopped: ${problem}.${left ? ` ${count(left, "song")} still to look up; what was found is kept.` : ""}`
-    : left ? `Stopped with ${count(left, "song")} still to look up.` : `Done: ${count(searches, "search", "searches")} used.`,
+    : left ? `Stopped with ${count(left, "song")} still to look up.`
+      : `Done.${apiSearches ? ` ${count(apiSearches, "search", "searches")} fell back to YouTube's official search (YouTube Music's own failed or found nothing).` : ""}`,
     problem ? "error" : "ok");
   updateMatchUi();
 }
@@ -255,12 +256,14 @@ function updateMatchUi(): void {
 
   const job = playlist && !forceNewPlaylist ? store.getJob(playlist.id) : undefined;
   const toAdd = rows.filter((r) => r.include && !job?.added.includes(r.track.id)).length;
-  // Each search is 100 units, each added song 50, of the site's shared 10,000 a day.
-  const units = lookups * yt.COST.search + toAdd * yt.COST.insert + (job ? 0 : yt.COST.createPlaylist);
+  // Looking songs up goes through YouTube Music's own search and costs nothing. Each added
+  // song is 50 units (and a new playlist 50) of the site's shared 10,000 a day.
+  const units = toAdd * yt.COST.insert + (job ? 0 : yt.COST.createPlaylist);
   $("quota-note").textContent = rows.length && (lookups || toAdd)
-    ? "YouTube's API gives this site a shared daily budget (10,000 units by default). " +
-      `${lookups ? `Looking up ${count(lookups, "song")} and adding` : "Adding"} ${count(toAdd, "song")} costs at least ${units.toLocaleString("en-GB")} units. ` +
-      "Matches are remembered in this browser, so if the budget runs out, come back later and carry on where it stopped."
+    ? "Looking songs up is free: it uses YouTube Music's own search. Adding them uses YouTube's API budget, shared by everyone " +
+      "using this site: 10,000 units a day at 50 per song, so about 200 songs a day. " +
+      (toAdd ? `Adding ${count(toAdd, "song")} costs ${units.toLocaleString("en-GB")} units. ` : "") +
+      "If the budget runs out, the copy stops and carries on where it left off after midnight Pacific time."
     : "";
 
   $("step-create").hidden = !rows.some((r) => r.match);

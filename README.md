@@ -182,8 +182,9 @@ log streams live and each playlist gets a summary listing any songs that weren't
 A separate, fully client-side app for one job: paste a public Spotify playlist link, sign in
 with Google, review the matches, and get the playlist in your YouTube Music. It reads Spotify
 the same anonymous way as `spotify_public.py` and matches songs with a TypeScript port of
-`matching.py` (checked against it by a parity test), but uses the official YouTube Data API
-instead of ytmusicapi. It doesn't share code or state with the Python tool. Setup, the
+`matching.py` (checked against it by a parity test). It finds songs through YouTube Music's
+own search (the request ytmusicapi makes, run by a small server function) and creates the
+playlist through the official YouTube Data API. It doesn't share code or state with the Python tool. Setup, the
 Google client ID it needs, YouTube's API quota and deploying to Cloudflare Pages are in
 [web/README.md](web/README.md).
 

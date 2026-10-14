@@ -1,12 +1,16 @@
 /**
- * YouTube Music through the official YouTube Data API v3, called from the browser with the
- * visitor's own Google sign-in (Google Identity Services' popup token flow). No backend: the
- * access token lives only in this page's memory.
+ * YouTube Music: finding songs, and creating the playlist through the official YouTube Data
+ * API v3 with the visitor's own Google sign-in (Google Identity Services' popup token flow).
+ * The access token lives only in this page's memory.
  *
- * Quota: every call is charged to the site's Google Cloud project, shared by all visitors
- * (10,000 units a day by default). search.list costs 100 units, playlistItems.insert 50,
- * playlists.insert 50, videos.list and channels.list 1. So matching tries as few searches as
- * it can, and every match is remembered in localStorage so nothing is searched twice.
+ * Search goes through this site's /api/youtube-search (functions/api/youtube-search.ts), which
+ * asks YouTube Music's own, unofficial search API and costs no API quota. Only if that fails or
+ * finds nothing does a search fall back to the official search.list.
+ *
+ * Quota: every official call is charged to the site's Google Cloud project, shared by all
+ * visitors (10,000 units a day by default). search.list has its own extra cap of 100 calls a
+ * day and costs 100 units, playlistItems.insert 50, playlists.insert 50, videos.list and
+ * channels.list 1. Every match is remembered in localStorage so nothing is searched twice.
  */
 
 import { bestMatch, searchQueries, THRESHOLD } from "./matching";
@@ -148,12 +152,62 @@ export async function me(): Promise<string> {
 interface SearchItem { id: { videoId: string }; snippet: { title: string; channelTitle: string; thumbnails?: { default?: { url: string } } } }
 interface VideoItem { id: string; contentDetails: { duration: string }; snippet?: SearchItem["snippet"] }
 
-export async function search(query: string): Promise<Video[]> {
+/** Search through the official API: 100 quota units, and one of search.list's 100 calls a day. */
+export async function apiSearch(query: string): Promise<Video[]> {
   const r = await call<{ items?: SearchItem[] }>("GET", "search", {
     part: "snippet", type: "video", videoCategoryId: "10", maxResults: "10", q: query,
   });
   const items = (r.items ?? []).filter((i) => i.id?.videoId);
   return withDurations(items.map((i) => ({ id: i.id.videoId, snippet: i.snippet })));
+}
+
+export const SEARCH_PROXY = "/api/youtube-search";
+
+interface MusicResult { videoId: string; title: string; artists: string[]; durationMs: number | null; thumbnail: string }
+
+/** Search YouTube Music through this site's server function: free, no sign-in needed. */
+export async function musicSearch(query: string): Promise<Video[]> {
+  const res = await http(`${SEARCH_PROXY}?${new URLSearchParams({ q: query })}`)
+    .catch(() => { throw new YouTubeError("Couldn't reach this site's YouTube Music search"); });
+  const body = await res.json().catch(() => ({})) as { results?: MusicResult[]; error?: string };
+  if (!res.ok || !Array.isArray(body.results)) {
+    throw new YouTubeError(`YouTube Music search failed${body.error ? `: ${body.error}` : ` (HTTP ${res.status})`}`);
+  }
+  return body.results.filter((r) => r?.videoId && r.title).map((r) => {
+    const artists = (r.artists ?? []).filter(Boolean);
+    return {
+      id: r.videoId, title: r.title, artists, channel: artists.join(", "), durationMs: r.durationMs ?? null,
+      service: "youtube", thumbnail: r.thumbnail ?? "",
+    };
+  });
+}
+
+export interface SearchResult {
+  videos: Video[];
+  /** True when the official API answered (it costs quota); false for YouTube Music's own search. */
+  official: boolean;
+}
+
+/**
+ * YouTube Music's own search first; the official search.list only if that fails or finds
+ * nothing, so an unannounced change on Google's side slows the site down instead of breaking it.
+ */
+export async function search(query: string): Promise<SearchResult> {
+  let proxyFailed = false;
+  try {
+    const videos = await musicSearch(query);
+    if (videos.length) return { videos, official: false };
+  } catch {
+    proxyFailed = true;
+  }
+  try {
+    return { videos: await apiSearch(query), official: true };
+  } catch (err) {
+    if (!(err instanceof QuotaError)) throw err;
+    // YouTube Music answered but found nothing: that's the answer, not a reason to stop.
+    if (!proxyFailed) return { videos: [], official: false };
+    throw new QuotaError("YouTube Music search isn't answering, and the backup (YouTube's official search, 100 a day for this site) is used up for today; it resets at midnight Pacific time (09:00/10:00 in Israel)");
+  }
 }
 
 /** One video by id (for a link the user pasted), or null. */
@@ -195,23 +249,25 @@ export interface Match {
   score: number;
   suggestion?: Video; // the best below-threshold candidate, shown but not added
   searches: number;
+  apiSearches: number; // how many of them fell back to the official API (and cost quota)
 }
 
-/** Finds `track` on YouTube with as few searches (100 quota units each) as it takes. */
+/** Finds `track` on YouTube, stopping at the first query that gives an acceptable match. */
 export async function findMatch(track: Track): Promise<Match> {
-  let best: Video | null = null, bestScore = 0, searches = 0;
+  let best: Video | null = null, bestScore = 0, searches = 0, apiSearches = 0;
   for (const query of searchQueries(track)) {
-    const videos = await search(query);
+    const { videos, official } = await search(query);
     searches++;
+    if (official) apiSearches++;
     for (const v of videos) {
       const [, s] = bestMatch(track, readings(v));
       if (s > bestScore) [best, bestScore] = [v, s];
     }
-    // The CLI keeps searching up to GOOD_ENOUGH; here any acceptable match stops it, to save quota.
+    // The CLI keeps searching up to GOOD_ENOUGH; here any acceptable match stops it, to keep it quick.
     if (bestScore >= THRESHOLD) break;
   }
-  if (best && bestScore >= THRESHOLD) return { video: best, score: bestScore, searches };
-  return { video: null, score: bestScore, suggestion: best ?? undefined, searches };
+  if (best && bestScore >= THRESHOLD) return { video: best, score: bestScore, searches, apiSearches };
+  return { video: null, score: bestScore, suggestion: best ?? undefined, searches, apiSearches };
 }
 
 export type Privacy = "private" | "unlisted" | "public";
