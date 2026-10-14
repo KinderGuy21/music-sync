@@ -79,13 +79,25 @@ How it reads the playlist, in order:
    the *contents* of playlists the caller owns, and an app token owns nothing, so for most
    apps this yields just the name and description; apps with extended quota get every song,
    with ISRCs.
-2. **The public playlist page** (`open.spotify.com/embed/playlist/{id}`), the same list
+2. **The web player's anonymous access**: the guest token that open.spotify.com gets for a
+   visitor who isn't logged in, used the way the web player itself uses it, 100 songs a page
+   until the playlist ends. Needs no keys and has **no song limit**. No ISRCs (unless
+   Spotify's standard Web API accepts that token again, which music-sync tries first), so
+   matching goes by title, artist, album and duration.
+   **This is unofficial and undocumented**: it signs the token request with a code taken from
+   the web player's JavaScript, and Spotify can change or block it at any time (its token
+   endpoint says such use isn't permitted under its Developer Terms). When it stops working,
+   music-sync falls back to the next way instead of failing.
+3. **The public playlist page** (`open.spotify.com/embed/playlist/{id}`), the same list
    anyone sees when they open the link. Needs no keys at all, but carries only the **first
-   100 songs**; for longer playlists music-sync warns how many were skipped. No ISRCs, so
-   matching goes by title, artist and duration.
+   100 songs**. It is only used if the way above fails; for playlists longer than 100 songs
+   music-sync then warns how many were skipped and why the full read failed. No ISRCs.
 
-If the playlist is private or doesn't exist, both fail and music-sync says so: ask the owner
-to make it public, or sign in with `music-sync auth spotify` as an account that owns or
+The 100-song warning only appears when songs were actually skipped: a long playlist read in
+full the second way gets no warning.
+
+If the playlist is private or doesn't exist, every way fails and music-sync says so: ask the
+owner to make it public, or sign in with `music-sync auth spotify` as an account that owns or
 collaborates on it.
 
 ### YouTube Music (OAuth or browser login)
@@ -201,7 +213,7 @@ music_sync/
   providers/
     base.py           the Provider interface
     spotify.py        Spotify Web API via spotipy
-    spotify_public.py public Spotify playlists without a login (app-only API, public page)
+    spotify_public.py public Spotify playlists without a login (app-only API, web player, public page)
     youtube_music.py  YouTube Music via ytmusicapi
     apple_music.py    Apple Music API + MusicKit developer token
   web/
@@ -224,7 +236,9 @@ pytest
 
 - Spotify: search returns at most 10 results per query; through your login only your
   own/collaborative playlists' contents are readable, and other public playlists are read
-  without a login, which stops at their first 100 songs; development-mode apps are limited to 5 users.
+  without a login through the web player's unofficial anonymous access (every song), falling
+  back to the embed page's first 100 songs if Spotify blocks that; development-mode apps are
+  limited to 5 users.
 - YouTube Music: unofficial API; no ISRCs, so matching is by title/artist/duration only.
 - Apple Music: add-only (no removals or renames through the API).
 - Songs that don't exist on the target service are listed as "not found" rather than

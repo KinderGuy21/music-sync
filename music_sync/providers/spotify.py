@@ -129,7 +129,7 @@ class SpotifyProvider(Provider):
                 description=p.get("description") or "",
                 track_count=counts.get("total"),
                 service=self.name,
-                # Public playlists you don't own are read the no-login way (first 100 songs).
+                # Public playlists you don't own are read the no-login way (see spotify_public).
                 readable=bool(owned or p.get("public")),
             ))
         return out
