@@ -34,7 +34,7 @@ interface TokenClient { requestAccessToken(options?: { prompt?: string }): void 
 declare const google: {
   accounts: { oauth2: {
     initTokenClient(config: {
-      client_id: string; scope: string; callback: (r: TokenResponse) => void;
+      client_id: string; scope: string; include_granted_scopes?: boolean; callback: (r: TokenResponse) => void;
       error_callback?: (e: { type: string; message?: string }) => void;
     }): TokenClient;
     revoke(token: string, done?: () => void): void;
@@ -66,6 +66,10 @@ export async function signIn(): Promise<string> {
   tokenClient ??= google.accounts.oauth2.initTokenClient({
     client_id: clientId,
     scope: SCOPE,
+    // GIS defaults this to true, which adds every scope the account already granted this client
+    // ID (e.g. drive.file from another app on the same client). Google then rejects the request:
+    // "scopes that cannot be requested together". Ask for the YouTube scope alone.
+    include_granted_scopes: false,
     callback: (r) => {
       if (r.access_token) {
         accessToken = r.access_token;
