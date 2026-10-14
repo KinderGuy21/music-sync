@@ -68,15 +68,24 @@ describe("YouTube helpers", () => {
 
 describe("findMatch against a fake YouTube API", () => {
   type Video = { id: string; title: string; channel: string; secs: number };
-  function fakeApi(results: Record<string, Video[]>) {
+  type Fake = { music?: Record<string, Video[]> | "down"; api?: Record<string, Video[]> };
+  /** `music`: what /api/youtube-search answers (or "down"); `api`: what the official search.list answers. */
+  function fake({ music = {}, api = {} }: Fake) {
     const calls: string[] = [];
     yt.setAccessToken("test-token");
     yt.setHttp(async (input) => {
-      const url = new URL(String(input));
+      const url = new URL(String(input), "https://site.test");
+      if (url.pathname === yt.SEARCH_PROXY) {
+        calls.push("music");
+        if (music === "down") return Response.json({ error: "YouTube Music answered HTTP 403" }, { status: 502 });
+        const results = (music[url.searchParams.get("q")!] ?? []).map((v) => ({
+          videoId: v.id, title: v.title, artists: [v.channel], durationMs: v.secs * 1000, thumbnail: "" }));
+        return Response.json({ results });
+      }
       calls.push(url.pathname.split("/").pop()!);
-      const all = Object.values(results).flat();
+      const all = Object.values(api).flat();
       if (url.pathname.endsWith("/search")) {
-        const items = (results[url.searchParams.get("q")!] ?? []).map((v) => ({
+        const items = (api[url.searchParams.get("q")!] ?? []).map((v) => ({
           id: { videoId: v.id }, snippet: { title: v.title, channelTitle: v.channel } }));
         return Response.json({ items });
       }
@@ -90,31 +99,66 @@ describe("findMatch against a fake YouTube API", () => {
     return calls;
   }
   const source = { id: "s1", title: "Bohemian Rhapsody - Remastered 2011", artists: ["Queen"], durationMs: 354000, service: "spotify" as const };
+  const results = { "Bohemian Rhapsody Queen": [
+    { id: "live000000a", title: "Bohemian Rhapsody (Live Aid 1985)", channel: "Queen Official", secs: 360 },
+    { id: "studio0000a", title: "Bohemian Rhapsody (Remastered 2011)", channel: "Queen - Topic", secs: 355 },
+    { id: "cover00000a", title: "Bohemian Rhapsody", channel: "Pentatonix", secs: 300 },
+  ] };
+  const coverOnly = { "Bohemian Rhapsody Queen": [{ id: "cover00000a", title: "Bohemian Rhapsody", channel: "Pentatonix", secs: 300 }] };
 
-  it("takes the right recording and stops after one search", async () => {
-    const calls = fakeApi({ "Bohemian Rhapsody Queen": [
-      { id: "live000000a", title: "Bohemian Rhapsody (Live Aid 1985)", channel: "Queen Official", secs: 360 },
-      { id: "studio0000a", title: "Bohemian Rhapsody (Remastered 2011)", channel: "Queen - Topic", secs: 355 },
-      { id: "cover00000a", title: "Bohemian Rhapsody", channel: "Pentatonix", secs: 300 },
-    ] });
+  it("searches YouTube Music through the site's proxy, without touching the official API", async () => {
+    const calls = fake({ music: results });
     const m = await yt.findMatch(source);
     expect(m.video?.id).toBe("studio0000a");
     expect(m.score).toBeGreaterThan(0.9);
-    expect(m.searches).toBe(1);
-    expect(calls).toEqual(["search", "videos"]);
+    expect([m.searches, m.apiSearches]).toEqual([1, 0]);
+    expect(calls).toEqual(["music"]);
+  });
+
+  it("falls back to the official search when the proxy fails", async () => {
+    const calls = fake({ music: "down", api: results });
+    const m = await yt.findMatch(source);
+    expect(m.video?.id).toBe("studio0000a");
+    expect([m.searches, m.apiSearches]).toEqual([1, 1]);
+    expect(calls).toEqual(["music", "search", "videos"]);
+  });
+
+  it("falls back to the official search when the proxy finds nothing", async () => {
+    const calls = fake({ music: {}, api: results });
+    const m = await yt.findMatch(source);
+    expect(m.video?.id).toBe("studio0000a");
+    expect(calls).toEqual(["music", "search", "videos"]);
+  });
+
+  it("falls back when the proxy answers something unexpected", async () => {
+    fake({ api: results });
+    const real = yt.http;
+    yt.setHttp(async (input, init) => String(input).startsWith(yt.SEARCH_PROXY) ? new Response("<html>", { status: 200 }) : real(input, init));
+    expect((await yt.findMatch(source)).video?.id).toBe("studio0000a");
   });
 
   it("reports a below-threshold suggestion instead of adding it", async () => {
-    fakeApi({ "Bohemian Rhapsody Queen": [{ id: "cover00000a", title: "Bohemian Rhapsody", channel: "Pentatonix", secs: 300 }] });
+    fake({ music: coverOnly });
     const m = await yt.findMatch(source);
     expect(m.video).toBeNull();
     expect(m.suggestion?.id).toBe("cover00000a");
     expect(m.searches).toBe(4); // every query tried before giving up
   });
 
-  it("turns an exhausted quota into a QuotaError", async () => {
+  it("treats an empty proxy answer as 'not found' once the official quota is gone", async () => {
     yt.setAccessToken("test-token");
-    yt.setHttp(async () => Response.json({ error: { code: 403, errors: [{ reason: "quotaExceeded" }] } }, { status: 403 }));
+    yt.setHttp(async (input) => String(input).startsWith(yt.SEARCH_PROXY)
+      ? Response.json({ results: [] })
+      : Response.json({ error: { code: 403, errors: [{ reason: "quotaExceeded" }] } }, { status: 403 }));
+    const m = await yt.findMatch(source);
+    expect([m.video, m.searches, m.apiSearches]).toEqual([null, 4, 0]);
+  });
+
+  it("turns an exhausted quota into a QuotaError when the proxy is down too", async () => {
+    yt.setAccessToken("test-token");
+    yt.setHttp(async (input) => String(input).startsWith(yt.SEARCH_PROXY)
+      ? new Response("{}", { status: 502 })
+      : Response.json({ error: { code: 403, errors: [{ reason: "quotaExceeded" }] } }, { status: 403 }));
     await expect(yt.findMatch(source)).rejects.toBeInstanceOf(yt.QuotaError);
   });
 });

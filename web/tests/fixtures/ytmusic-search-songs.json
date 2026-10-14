@@ -1,0 +1,332 @@
+{
+ "contents": {
+  "tabbedSearchResultsRenderer": {
+   "tabs": [
+    {
+     "tabRenderer": {
+      "title": "YT Music",
+      "content": {
+       "sectionListRenderer": {
+        "contents": [
+         {
+          "musicShelfRenderer": {
+           "title": {
+            "runs": [
+             {
+              "text": "Songs"
+             }
+            ]
+           },
+           "contents": [
+            {
+             "musicResponsiveListItemRenderer": {
+              "thumbnail": {
+               "musicThumbnailRenderer": {
+                "thumbnail": {
+                 "thumbnails": [
+                  {
+                   "url": "https://yt3.googleusercontent.com/nLn1gxvYiZqzXOY9HyUXVXbFtmR5nhY8sDpbvBT1aw-Ejjsz__Nz90sZoc4nZgff2sf8WjowuVRVBlBTww=w60-h60-l90-rj",
+                   "width": 60,
+                   "height": 60
+                  },
+                  {
+                   "url": "https://yt3.googleusercontent.com/nLn1gxvYiZqzXOY9HyUXVXbFtmR5nhY8sDpbvBT1aw-Ejjsz__Nz90sZoc4nZgff2sf8WjowuVRVBlBTww=w120-h120-l90-rj",
+                   "width": 120,
+                   "height": 120
+                  }
+                 ]
+                }
+               }
+              },
+              "flexColumns": [
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Bohemian Rhapsody",
+                    "navigationEndpoint": {
+                     "watchEndpoint": {
+                      "videoId": "BSTsnWoslP4"
+                     }
+                    }
+                   }
+                  ]
+                 }
+                }
+               },
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Queen",
+                    "navigationEndpoint": {
+                     "browseEndpoint": {
+                      "browseId": "UCEPMVbUzImPl4p8k4LkGevA"
+                     }
+                    }
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "A Night At The Opera",
+                    "navigationEndpoint": {
+                     "browseEndpoint": {
+                      "browseId": "MPREb_eEpQf8QskKl"
+                     }
+                    }
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "5:55"
+                   }
+                  ],
+                  "accessibility": {}
+                 }
+                }
+               },
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "2.7B plays"
+                   }
+                  ],
+                  "accessibility": {}
+                 }
+                }
+               }
+              ],
+              "playlistItemData": {
+               "videoId": "BSTsnWoslP4"
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemRenderer": {
+              "thumbnail": {
+               "musicThumbnailRenderer": {
+                "thumbnail": {
+                 "thumbnails": [
+                  {
+                   "url": "https://yt3.googleusercontent.com/HYxBxWUwgeP4rkP4uDdpgN_IXz19JFDDNOoq0L0CDHwdaJrwKAXqm1a0V11evw7iax_pIAG_Y645lxKY=w60-h60-l90-rj",
+                   "width": 60,
+                   "height": 60
+                  },
+                  {
+                   "url": "https://yt3.googleusercontent.com/HYxBxWUwgeP4rkP4uDdpgN_IXz19JFDDNOoq0L0CDHwdaJrwKAXqm1a0V11evw7iax_pIAG_Y645lxKY=w120-h120-l90-rj",
+                   "width": 120,
+                   "height": 120
+                  }
+                 ]
+                }
+               }
+              },
+              "flexColumns": [
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Bohemian Rhapsody",
+                    "navigationEndpoint": {
+                     "watchEndpoint": {
+                      "videoId": "_xwmsnDWfxQ"
+                     }
+                    }
+                   }
+                  ]
+                 }
+                }
+               },
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Alex Goot",
+                    "navigationEndpoint": {
+                     "browseEndpoint": {
+                      "browseId": "UCFn-B19siHrgQ8_dsJKhyzA"
+                     }
+                    }
+                   },
+                   {
+                    "text": ", "
+                   },
+                   {
+                    "text": "Sam Tsui",
+                    "navigationEndpoint": {
+                     "browseEndpoint": {
+                      "browseId": "UCaZGpQzGguaHqJMeMh-2Q8Q"
+                     }
+                    }
+                   },
+                   {
+                    "text": ", "
+                   },
+                   {
+                    "text": "Tyler Ward",
+                    "navigationEndpoint": {
+                     "browseEndpoint": {
+                      "browseId": "UCmnN9gKP8B___PNym9pzv7A"
+                     }
+                    }
+                   },
+                   {
+                    "text": " & "
+                   },
+                   {
+                    "text": "Kurt Hugo Schneider",
+                    "navigationEndpoint": {
+                     "browseEndpoint": {
+                      "browseId": "UC-u3msJ-G8xYr931alnM7dw"
+                     }
+                    }
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "Bohemian Rhapsody",
+                    "navigationEndpoint": {
+                     "browseEndpoint": {
+                      "browseId": "MPREb_Yk2Ey3ovHs3"
+                     }
+                    }
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "5:57"
+                   }
+                  ],
+                  "accessibility": {}
+                 }
+                }
+               },
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "6.1M plays"
+                   }
+                  ],
+                  "accessibility": {}
+                 }
+                }
+               }
+              ],
+              "playlistItemData": {
+               "videoId": "_xwmsnDWfxQ"
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemRenderer": {
+              "thumbnail": {
+               "musicThumbnailRenderer": {
+                "thumbnail": {
+                 "thumbnails": [
+                  {
+                   "url": "https://yt3.googleusercontent.com/3Q-DmbltAhlB3AbkIdNjDYdTD93hlrb3qYeOWCzc_sYuV7xAhSOrsupPdVpnQUxBwjTXxFFp0vLB9tcYkA=w60-h60-l90-rj",
+                   "width": 60,
+                   "height": 60
+                  },
+                  {
+                   "url": "https://yt3.googleusercontent.com/3Q-DmbltAhlB3AbkIdNjDYdTD93hlrb3qYeOWCzc_sYuV7xAhSOrsupPdVpnQUxBwjTXxFFp0vLB9tcYkA=w120-h120-l90-rj",
+                   "width": 120,
+                   "height": 120
+                  }
+                 ]
+                }
+               }
+              },
+              "flexColumns": [
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Bohemian Rhapsody",
+                    "navigationEndpoint": {
+                     "watchEndpoint": {
+                      "videoId": "Eyi-1APybjE"
+                     }
+                    }
+                   }
+                  ]
+                 }
+                }
+               },
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Brooklyn Duo",
+                    "navigationEndpoint": {
+                     "browseEndpoint": {
+                      "browseId": "UCbfVC9opSnbIBw1ZfbY0wXw"
+                     }
+                    }
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "Brooklyn Sessions VI",
+                    "navigationEndpoint": {
+                     "browseEndpoint": {
+                      "browseId": "MPREb_qXV6ivYZwlC"
+                     }
+                    }
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "6:24"
+                   }
+                  ],
+                  "accessibility": {}
+                 }
+                }
+               },
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "6.8M plays"
+                   }
+                  ],
+                  "accessibility": {}
+                 }
+                }
+               }
+              ],
+              "playlistItemData": {
+               "videoId": "Eyi-1APybjE"
+              }
+             }
+            }
+           ]
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  }
+ }
+}
