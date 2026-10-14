@@ -7,7 +7,7 @@ from music_sync import cli
 from music_sync.config import load_settings
 from music_sync.providers.base import ProviderError
 from music_sync.providers.spotify import SpotifyProvider
-from music_sync.providers.spotify_public import PublicSpotifyReader, parse_playlist_id
+from music_sync.providers.spotify_public import PublicSpotifyReader, parse_playlist_id, totp
 from music_sync.providers.youtube_music import YouTubeMusicProvider
 
 from .fakes import FakeProvider, T
@@ -37,7 +37,8 @@ class FakeHttp:
 
     def _answer(self, method, url, **kw):
         self.calls.append((method, url, kw))
-        return self.routes.get(url, Response(404, {"error": "not found"}, "not found"))
+        route = self.routes.get(url, Response(404, {"error": "not found"}, "not found"))
+        return route(**kw) if callable(route) else route
 
     def get(self, url, **kw):
         return self._answer("GET", url, **kw)
@@ -67,6 +68,44 @@ def embed_entry(n: int, artists: str = "") -> dict:
 
 
 TOKEN = {"https://accounts.spotify.com/api/token": Response(200, {"access_token": "app-token"})}
+
+BUNDLE = "https://open.spotifycdn.com/cdn/build/web-player/web-player.abc123.js"
+PATHFINDER = "https://api-partner.spotify.com/pathfinder/v2/query"
+HASH = "8964e8eafb21aa992a7d951d256d83285c04be2105d209262901de70cb97584a"
+APP_CONFIG = "eyJjbGllbnRWZXJzaW9uIjogIjEuMy42In0="  # base64 of {"clientVersion": "1.3.6"}
+
+
+def pathfinder_item(n: int) -> dict:
+    return {"itemV2": {"__typename": "TrackResponseWrapper", "data": {
+        "__typename": "Track", "uri": f"spotify:track:sp{n}", "name": f"Song {n}",
+        "artists": {"items": [{"profile": {"name": f"Artist {n}"}}]},
+        "albumOfTrack": {"name": "Album"}, "trackDuration": {"totalMilliseconds": 200000 + n}}}}
+
+
+def web_player(total: int, name: str = "Shared Mix") -> dict:
+    """The routes of open.spotify.com's anonymous web-player access, for a playlist of ``total`` songs."""
+    entries = [pathfinder_item(n) for n in range(total)]
+    entries.insert(5, {"itemV2": {"__typename": "EpisodeResponseWrapper", "data": {"__typename": "Episode"}}})
+
+    def playlist_query(json, headers, **kw):
+        assert headers["Authorization"] == "Bearer anon-token" and headers["client-token"] == "client-token"
+        assert json["extensions"]["persistedQuery"]["sha256Hash"] == HASH
+        offset, limit = json["variables"]["offset"], json["variables"]["limit"]
+        return Response(200, {"data": {"playlistV2": {"__typename": "Playlist", "name": name, "description": "",
+                                                      "content": {"totalCount": len(entries),
+                                                                  "items": entries[offset:offset + limit]}}}})
+
+    return {
+        PAGE: Response(200, text=f'<script src="{BUNDLE}"></script>'
+                                 f'<script id="appServerConfig" type="text/plain">{APP_CONFIG}</script>'),
+        BUNDLE: Response(200, text="let ej=[{secret:'abc\\'d',version:61},{secret:'old',version:60}];"
+                                   f'x("fetchPlaylist","query","{HASH}",null)'),
+        "https://open.spotify.com/api/server-time": Response(200, {"serverTime": 1791987630}),
+        "https://open.spotify.com/api/token": Response(200, {"accessToken": "anon-token", "clientId": "web",
+                                                             "isAnonymous": True}),
+        "https://clienttoken.spotify.com/v1/clienttoken": Response(200, {"granted_token": {"token": "client-token"}}),
+        PATHFINDER: playlist_query,
+    }
 
 
 # --- link parsing -------------------------------------------------------------
@@ -145,6 +184,80 @@ def test_without_any_keys_the_public_page_is_read():
     assert http.urls("POST") == []  # no token request at all
     assert result.playlist.name == "Shared Mix"
     assert result.tracks[1].artists == ["Tyler, The Creator"]
+
+
+def test_totp_matches_the_rfc_6238_test_vector():
+    assert totp(b"12345678901234567890", 59) == "287082"
+
+
+def test_anonymous_web_player_access_reads_every_page():
+    http = FakeHttp(web_player(250))
+
+    result = PublicSpotifyReader("", "", http).read(PID)
+
+    assert [t.id for t in result.tracks] == [f"sp{n}" for n in range(250)]  # the episode is skipped
+    assert result.tracks[120].artists == ["Artist 120"] and result.tracks[120].album == "Album"
+    assert result.playlist.name == "Shared Mix" and result.playlist.track_count == 251
+    assert not result.notices  # everything was read: no 100-song warning
+    queries = [kw["json"]["variables"] for m, u, kw in http.calls if u == PATHFINDER]
+    assert [(q["offset"], q["limit"]) for q in queries] == [(0, 100), (100, 100), (200, 100)]
+    _, _, token_call = next(c for c in http.calls if c[1] == "https://open.spotify.com/api/token")
+    assert token_call["params"]["totpVer"] == "61" and len(token_call["params"]["totp"]) == 6
+    assert EMBED not in http.urls()
+
+
+def test_anonymous_token_on_the_web_api_is_used_when_spotify_allows_it():
+    http = FakeHttp({**web_player(1), API: Response(200, {"name": "Shared Mix", "items": {
+        "items": [api_item(0), api_item(1)], "next": None, "total": 2}})})
+
+    result = PublicSpotifyReader("", "", http).read(PID)
+
+    assert [t.isrc for t in result.tracks] == ["ISRC0", "ISRC1"]
+    assert PATHFINDER not in http.urls("POST")
+    assert http.calls[[u for _, u, _ in http.calls].index(API)][2]["headers"]["Authorization"] == "Bearer anon-token"
+
+
+def test_web_api_rate_limit_falls_through_to_the_web_players_query():
+    http = FakeHttp({**web_player(3), API: Response(429, {"error": {"status": 429}})})
+
+    result = PublicSpotifyReader("", "", http).read(PID)
+
+    assert [t.id for t in result.tracks] == ["sp0", "sp1", "sp2"] and not result.notices
+
+
+@pytest.mark.parametrize("broken", [
+    {"https://open.spotify.com/api/token": Response(400, {"error": "Unauthorized request"})},
+    {BUNDLE: Response(200, text="nothing to see")},
+    {PATHFINDER: Response(403, {"error": "Client/request not allowed"})},
+])
+def test_when_the_anonymous_route_breaks_the_embed_page_is_the_fallback(broken):
+    routes = {**web_player(150), **broken,
+              EMBED: Response(200, text=embed_page([embed_entry(n) for n in range(100)]))}
+    page = routes[PAGE].text + '<meta name="music:song_count" content="150"/>'
+    routes[PAGE] = Response(200, text=page)
+    http = FakeHttp(routes)
+
+    result = PublicSpotifyReader("", "", http).read(PID)
+
+    assert len(result.tracks) == 100 and result.playlist.track_count == 150
+    assert "first 100" in result.notices[0] and "web-player route failed" in result.notices[0]
+
+
+def test_short_playlist_read_from_the_embed_page_gets_no_warning():
+    http = FakeHttp({EMBED: Response(200, text=embed_page([embed_entry(n) for n in range(40)]))})
+
+    result = PublicSpotifyReader("", "", http).read(PID)
+
+    assert len(result.tracks) == 40 and not result.notices
+
+
+def test_playlist_the_web_player_cannot_find_gives_a_clear_error():
+    http = FakeHttp({**web_player(1), PATHFINDER: Response(200, {"data": {"playlistV2": {"__typename": "NotFound"}}})})
+
+    with pytest.raises(ProviderError) as exc:
+        PublicSpotifyReader("", "", http).read(PID)
+
+    assert "public" in str(exc.value)
 
 
 def test_long_playlist_without_login_warns_it_was_cut_short():
