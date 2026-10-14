@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>music-sync: Spotify playlist to YouTube Music</title>
+  <meta name="description" content="Copy any public Spotify playlist to YouTube Music. No Spotify account needed.">
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+  <main>
+    <header>
+      <h1>music-sync</h1>
+      <p class="lead">Copy a public Spotify playlist to your YouTube Music. No Spotify account needed;
+        everything runs in your browser.</p>
+    </header>
+
+    <section id="step-spotify" class="card">
+      <h2><span class="num">1</span> Spotify playlist</h2>
+      <form id="spotify-form" class="row">
+        <input id="spotify-link" type="text" inputmode="url" autocomplete="off" spellcheck="false"
+               placeholder="https://open.spotify.com/playlist/…" aria-label="Spotify playlist link">
+        <button id="spotify-read" type="submit">Read playlist</button>
+      </form>
+      <p id="spotify-status" class="status" role="status"></p>
+    </section>
+
+    <section id="step-youtube" class="card">
+      <h2><span class="num">2</span> YouTube Music</h2>
+      <div class="row">
+        <button id="yt-signin" type="button">Sign in with Google</button>
+        <span id="yt-status" class="status" role="status"></span>
+        <button id="yt-signout" type="button" class="link" hidden>Sign out</button>
+      </div>
+      <p class="hint">You sign in with your own Google account, in a Google pop-up. The new playlist is
+        created in your account; this site never sees your password and keeps nothing on a server.</p>
+    </section>
+
+    <section id="step-match" class="card" hidden>
+      <h2><span class="num">3</span> Match the songs</h2>
+      <div class="row">
+        <button id="match-start" type="button">Find the songs on YouTube</button>
+        <button id="match-stop" type="button" class="secondary" hidden>Stop</button>
+        <span id="match-status" class="status" role="status"></span>
+      </div>
+      <progress id="match-progress" value="0" max="1" hidden></progress>
+      <p id="quota-note" class="hint"></p>
+      <div id="match-filter" class="row filters" hidden>
+        <label><input type="radio" name="filter" value="all" checked> All</label>
+        <label><input type="radio" name="filter" value="missing"> Not matched</label>
+        <span id="match-counts" class="status"></span>
+      </div>
+      <div class="table-wrap">
+        <table id="tracks" hidden>
+          <thead><tr><th>#</th><th>Spotify</th><th>YouTube Music</th><th title="How sure the match is">Match</th><th>Add</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="step-create" class="card" hidden>
+      <h2><span class="num">4</span> Create the playlist</h2>
+      <div class="row">
+        <input id="yt-title" type="text" aria-label="New playlist name">
+        <select id="yt-privacy" aria-label="Who can see it">
+          <option value="private">Private</option>
+          <option value="unlisted">Unlisted</option>
+          <option value="public">Public</option>
+        </select>
+      </div>
+      <div class="row">
+        <button id="create-start" type="button">Create playlist</button>
+        <button id="create-new" type="button" class="link" hidden>Start a new playlist instead</button>
+      </div>
+      <progress id="create-progress" value="0" max="1" hidden></progress>
+      <div id="summary" role="status"></div>
+    </section>
+
+    <footer>
+      <p>Reads Spotify the way its own web player does for a visitor who isn't logged in: unofficial,
+        so it may stop working if Spotify changes it. Uses the YouTube Data API with your own Google sign-in.
+        <a href="https://github.com/KinderGuy21/music-sync">Source</a></p>
+    </footer>
+  </main>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

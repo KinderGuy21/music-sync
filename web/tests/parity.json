@@ -1,0 +1,751 @@
+{
+ "titles": [
+  {
+   "raw": "Bohemian Rhapsody - Remastered 2011",
+   "core": "bohemian rhapsody",
+   "search": "Bohemian Rhapsody",
+   "tags": []
+  },
+  {
+   "raw": "Bohemian Rhapsody (Remastered 2011)",
+   "core": "bohemian rhapsody",
+   "search": "Bohemian Rhapsody",
+   "tags": []
+  },
+  {
+   "raw": "Under Pressure (feat. David Bowie)",
+   "core": "under pressure",
+   "search": "Under Pressure",
+   "tags": []
+  },
+  {
+   "raw": "Hotel California (Live at the Forum, 1976)",
+   "core": "hotel california",
+   "search": "Hotel California",
+   "tags": [
+    "live"
+   ]
+  },
+  {
+   "raw": "Layla - Acoustic; Live at MTV Unplugged",
+   "core": "layla",
+   "search": "Layla",
+   "tags": [
+    "acoustic",
+    "live"
+   ]
+  },
+  {
+   "raw": "Levels (Skrillex Remix)",
+   "core": "levels",
+   "search": "Levels",
+   "tags": [
+    "remix"
+   ]
+  },
+  {
+   "raw": "Beyoncé - Halo",
+   "core": "beyonce halo",
+   "search": "Beyoncé - Halo",
+   "tags": []
+  },
+  {
+   "raw": "Don't Stop Me Now",
+   "core": "dont stop me now",
+   "search": "Don't Stop Me Now",
+   "tags": []
+  },
+  {
+   "raw": "Queen - Bohemian Rhapsody (Official Video Remastered)",
+   "core": "queen bohemian rhapsody",
+   "search": "Queen - Bohemian Rhapsody",
+   "tags": []
+  },
+  {
+   "raw": "Despacito (feat. Daddy Yankee) - Remix",
+   "core": "despacito",
+   "search": "Despacito",
+   "tags": [
+    "remix"
+   ]
+  },
+  {
+   "raw": "Strobe - Radio Edit",
+   "core": "strobe",
+   "search": "Strobe",
+   "tags": []
+  },
+  {
+   "raw": "מה לעשות",
+   "core": "מה לעשות",
+   "search": "מה לעשות",
+   "tags": []
+  },
+  {
+   "raw": "Ma La'asot",
+   "core": "ma laasot",
+   "search": "Ma La'asot",
+   "tags": []
+  },
+  {
+   "raw": "מלכת הדור (Prod. by Stav)",
+   "core": "מלכת הדור",
+   "search": "מלכת הדור",
+   "tags": []
+  },
+  {
+   "raw": "Blinding Lights [Official Audio]",
+   "core": "blinding lights",
+   "search": "Blinding Lights",
+   "tags": []
+  },
+  {
+   "raw": "Sped Up Song - sped up",
+   "core": "sped up song",
+   "search": "Sped Up Song",
+   "tags": [
+    "sped up"
+   ]
+  },
+  {
+   "raw": "Kizomba Love (with Anna) - Extended Mix",
+   "core": "kizomba love",
+   "search": "Kizomba Love",
+   "tags": [
+    "extended"
+   ]
+  },
+  {
+   "raw": "Señorita",
+   "core": "senorita",
+   "search": "Señorita",
+   "tags": []
+  },
+  {
+   "raw": "Ünïcödé Tëst — Live",
+   "core": "unicode test",
+   "search": "Ünïcödé Tëst",
+   "tags": [
+    "live"
+   ]
+  },
+  {
+   "raw": "liveשלום",
+   "core": "liveשלום",
+   "search": "liveשלום",
+   "tags": []
+  },
+  {
+   "raw": "Song (From \"The Movie\")",
+   "core": "song",
+   "search": "Song",
+   "tags": []
+  },
+  {
+   "raw": "Track 2009 - Remaster 2009",
+   "core": "track 2009",
+   "search": "Track 2009",
+   "tags": []
+  }
+ ],
+ "artists": [
+  {
+   "raw": [
+    "Simon & Garfunkel"
+   ],
+   "split": [
+    "simon",
+    "garfunkel"
+   ]
+  },
+  {
+   "raw": [
+    "Queen - Topic"
+   ],
+   "split": [
+    "queen"
+   ]
+  },
+  {
+   "raw": [
+    "The Beatles"
+   ],
+   "split": [
+    "beatles"
+   ]
+  },
+  {
+   "raw": [
+    "Beyoncé, JAY-Z"
+   ],
+   "split": [
+    "beyonce",
+    "jay z"
+   ]
+  },
+  {
+   "raw": [
+    "QueenVEVO"
+   ],
+   "split": [
+    "queen"
+   ]
+  },
+  {
+   "raw": [
+    "Calvin Harris x Dua Lipa"
+   ],
+   "split": [
+    "calvin harris",
+    "dua lipa"
+   ]
+  },
+  {
+   "raw": [
+    "A feat. B",
+    "C vs. D"
+   ],
+   "split": [
+    "a",
+    "b",
+    "c",
+    "d"
+   ]
+  },
+  {
+   "raw": [
+    "עומר אדם"
+   ],
+   "split": [
+    "עומר אדם"
+   ]
+  },
+  {
+   "raw": [
+    "Marshmello; Bastille"
+   ],
+   "split": [
+    "marshmello",
+    "bastille"
+   ]
+  }
+ ],
+ "skeletons": [
+  {
+   "raw": "Bohemian Rhapsody - Remastered 2011",
+   "skeleton": "bmnrpsdrmstrd201"
+  },
+  {
+   "raw": "Bohemian Rhapsody (Remastered 2011)",
+   "skeleton": "bmnrpsdrmstrd201"
+  },
+  {
+   "raw": "Under Pressure (feat. David Bowie)",
+   "skeleton": "ndrprsrptdbdb"
+  },
+  {
+   "raw": "Hotel California (Live at the Forum, 1976)",
+   "skeleton": "tlklprnlbtprm1976"
+  },
+  {
+   "raw": "Layla - Acoustic; Live at MTV Unplugged",
+   "skeleton": "lkstklbtmtbnplgd"
+  },
+  {
+   "raw": "Levels (Skrillex Remix)",
+   "skeleton": "lblskrlkrmk"
+  },
+  {
+   "raw": "Beyoncé - Halo",
+   "skeleton": "bnkl"
+  },
+  {
+   "raw": "Don't Stop Me Now",
+   "skeleton": "dntstpmnb"
+  },
+  {
+   "raw": "Queen - Bohemian Rhapsody (Official Video Remastered)",
+   "skeleton": "knbmnrpsdpklbdrmstrd"
+  },
+  {
+   "raw": "Despacito (feat. Daddy Yankee) - Remix",
+   "skeleton": "dspktptdnkrmk"
+  },
+  {
+   "raw": "Strobe - Radio Edit",
+   "skeleton": "strbrdt"
+  },
+  {
+   "raw": "מה לעשות",
+   "skeleton": "mlst"
+  },
+  {
+   "raw": "Ma La'asot",
+   "skeleton": "mlst"
+  },
+  {
+   "raw": "מלכת הדור (Prod. by Stav)",
+   "skeleton": "mlktdrprdbstb"
+  },
+  {
+   "raw": "Blinding Lights [Official Audio]",
+   "skeleton": "blndnglgzpkld"
+  },
+  {
+   "raw": "Sped Up Song - sped up",
+   "skeleton": "spdpsngspdp"
+  },
+  {
+   "raw": "Kizomba Love (with Anna) - Extended Mix",
+   "skeleton": "kzmblbtnktndmk"
+  },
+  {
+   "raw": "Señorita",
+   "skeleton": "snrt"
+  },
+  {
+   "raw": "Ünïcödé Tëst — Live",
+   "skeleton": "nkdtstlb"
+  },
+  {
+   "raw": "liveשלום",
+   "skeleton": "liveslm"
+  },
+  {
+   "raw": "Song (From \"The Movie\")",
+   "skeleton": "sngprmtmb"
+  },
+  {
+   "raw": "Track 2009 - Remaster 2009",
+   "skeleton": "trk209rmstr209"
+  }
+ ],
+ "queries": [
+  {
+   "title": "Bohemian Rhapsody - Remastered 2011",
+   "artists": [
+    "Queen"
+   ],
+   "queries": [
+    "Bohemian Rhapsody Queen",
+    "Bohemian Rhapsody - Remastered 2011 Queen",
+    "Bohemian Rhapsody",
+    "Queen"
+   ]
+  },
+  {
+   "title": "Under Pressure",
+   "artists": [
+    "Queen",
+    "David Bowie"
+   ],
+   "queries": [
+    "Under Pressure Queen",
+    "Under Pressure Queen David Bowie",
+    "Under Pressure",
+    "Queen"
+   ]
+  },
+  {
+   "title": "Hotel California",
+   "artists": [
+    "Eagles"
+   ],
+   "queries": [
+    "Hotel California Eagles",
+    "Hotel California",
+    "Eagles"
+   ]
+  },
+  {
+   "title": "Hallelujah",
+   "artists": [
+    "Leonard Cohen"
+   ],
+   "queries": [
+    "Hallelujah Leonard Cohen",
+    "Hallelujah",
+    "Leonard Cohen"
+   ]
+  },
+  {
+   "title": "Ma La'asot",
+   "artists": [
+    "Omer Adam"
+   ],
+   "queries": [
+    "Ma La'asot Omer Adam",
+    "Ma La'asot",
+    "Omer Adam"
+   ]
+  },
+  {
+   "title": "Ma La'asot",
+   "artists": [
+    "Omer Adam"
+   ],
+   "queries": [
+    "Ma La'asot Omer Adam",
+    "Ma La'asot",
+    "Omer Adam"
+   ]
+  },
+  {
+   "title": "מה לעשות",
+   "artists": [
+    "עומר אדם"
+   ],
+   "queries": [
+    "מה לעשות עומר אדם",
+    "מה לעשות",
+    "עומר אדם"
+   ]
+  },
+  {
+   "title": "Bohemian Rhapsody",
+   "artists": [
+    "Queen"
+   ],
+   "queries": [
+    "Bohemian Rhapsody Queen",
+    "Bohemian Rhapsody",
+    "Queen"
+   ]
+  },
+  {
+   "title": "Bohemian Rhapsody",
+   "artists": [
+    "Queen"
+   ],
+   "queries": [
+    "Bohemian Rhapsody Queen",
+    "Bohemian Rhapsody",
+    "Queen"
+   ]
+  },
+  {
+   "title": "Titanium (feat. Sia)",
+   "artists": [
+    "David Guetta",
+    "Sia"
+   ],
+   "queries": [
+    "Titanium David Guetta",
+    "Titanium (feat. Sia) David Guetta Sia",
+    "Titanium",
+    "David Guetta"
+   ]
+  },
+  {
+   "title": "Shape of You",
+   "artists": [
+    "Ed Sheeran"
+   ],
+   "queries": [
+    "Shape of You Ed Sheeran",
+    "Shape of You",
+    "Ed Sheeran"
+   ]
+  },
+  {
+   "title": "Shape of You",
+   "artists": [
+    "Ed Sheeran"
+   ],
+   "queries": [
+    "Shape of You Ed Sheeran",
+    "Shape of You",
+    "Ed Sheeran"
+   ]
+  },
+  {
+   "title": "Kizomba Love",
+   "artists": [
+    "DJ X",
+    "Anna"
+   ],
+   "queries": [
+    "Kizomba Love DJ X",
+    "Kizomba Love DJ X Anna",
+    "Kizomba Love",
+    "DJ X"
+   ]
+  }
+ ],
+ "scores": [
+  {
+   "a": [
+    "Bohemian Rhapsody - Remastered 2011",
+    [
+     "Queen"
+    ],
+    354
+   ],
+   "b": [
+    "Bohemian Rhapsody (Remastered 2011)",
+    [
+     "Queen"
+    ],
+    355
+   ],
+   "score": 1.0
+  },
+  {
+   "a": [
+    "Under Pressure",
+    [
+     "Queen",
+     "David Bowie"
+    ],
+    248
+   ],
+   "b": [
+    "Under Pressure (feat. David Bowie)",
+    [
+     "Queen"
+    ],
+    247
+   ],
+   "score": 1.0
+  },
+  {
+   "a": [
+    "Hotel California",
+    [
+     "Eagles"
+    ],
+    391
+   ],
+   "b": [
+    "Hotel California - Live",
+    [
+     "Eagles"
+    ],
+    430
+   ],
+   "score": 0.7
+  },
+  {
+   "a": [
+    "Hallelujah",
+    [
+     "Leonard Cohen"
+    ],
+    279
+   ],
+   "b": [
+    "Hallelujah",
+    [
+     "Pentatonix"
+    ],
+    268
+   ],
+   "score": 0.5077294685990338
+  },
+  {
+   "a": [
+    "Ma La'asot",
+    [
+     "Omer Adam"
+    ],
+    253
+   ],
+   "b": [
+    "מה לעשות",
+    [
+     "עומר אדם"
+    ],
+    253
+   ],
+   "score": 0.915
+  },
+  {
+   "a": [
+    "Ma La'asot",
+    [
+     "Omer Adam"
+    ],
+    253
+   ],
+   "b": [
+    "מלכת הדור",
+    [
+     "Omer Adam"
+    ],
+    184
+   ],
+   "score": 0.62
+  },
+  {
+   "a": [
+    "מה לעשות",
+    [
+     "עומר אדם"
+    ],
+    253
+   ],
+   "b": [
+    "מה לעשות",
+    [
+     "Omer Adam"
+    ],
+    254
+   ],
+   "score": 0.965
+  },
+  {
+   "a": [
+    "Bohemian Rhapsody",
+    [
+     "Queen"
+    ],
+    354
+   ],
+   "b": [
+    "Queen - Bohemian Rhapsody (Official Video Remastered)",
+    [
+     "Queen Official"
+    ],
+    360
+   ],
+   "score": 0.9583333333333333
+  },
+  {
+   "a": [
+    "Bohemian Rhapsody",
+    [
+     "Queen"
+    ],
+    354
+   ],
+   "b": [
+    "Bohemian Rhapsody",
+    [
+     "Queen Official"
+    ],
+    null
+   ],
+   "score": 1.0
+  },
+  {
+   "a": [
+    "Titanium (feat. Sia)",
+    [
+     "David Guetta",
+     "Sia"
+    ],
+    245
+   ],
+   "b": [
+    "David Guetta - Titanium ft. Sia (Official Video)",
+    [
+     "David Guetta"
+    ],
+    250
+   ],
+   "score": 0.9638888888888888
+  },
+  {
+   "a": [
+    "Shape of You",
+    [
+     "Ed Sheeran"
+    ],
+    233
+   ],
+   "b": [
+    "Shape of You [Official Video]",
+    [
+     "Ed Sheeran"
+    ],
+    263
+   ],
+   "score": 0.85
+  },
+  {
+   "a": [
+    "Shape of You",
+    [
+     "Ed Sheeran"
+    ],
+    233
+   ],
+   "b": [
+    "Shape of You (Acoustic)",
+    [
+     "Ed Sheeran"
+    ],
+    223
+   ],
+   "score": 0.811111111111111
+  },
+  {
+   "a": [
+    "Kizomba Love",
+    [
+     "DJ X",
+     "Anna"
+    ],
+    300
+   ],
+   "b": [
+    "Kizomba Love (with Anna) - Extended Mix",
+    [
+     "DJ X"
+    ],
+    420
+   ],
+   "score": 0.7
+  }
+ ],
+ "fuzz": [
+  {
+   "a": "bohemian rhapsody",
+   "b": "bohemian rhapsody remastered",
+   "ratio": 75.55555555555556,
+   "token_set_ratio": 100.0
+  },
+  {
+   "a": "queen",
+   "b": "queen official",
+   "ratio": 52.63157894736843,
+   "token_set_ratio": 100.0
+  },
+  {
+   "a": "simon garfunkel",
+   "b": "garfunkel and simon",
+   "ratio": 52.94117647058824,
+   "token_set_ratio": 100.0
+  },
+  {
+   "a": "abc def",
+   "b": "xyz",
+   "ratio": 0.0,
+   "token_set_ratio": 0.0
+  },
+  {
+   "a": "a b c",
+   "b": "a b d e",
+   "ratio": 66.66666666666667,
+   "token_set_ratio": 75.0
+  },
+  {
+   "a": "hotel california",
+   "b": "california hotel live",
+   "ratio": 54.054054054054056,
+   "token_set_ratio": 100.0
+  },
+  {
+   "a": "sbt",
+   "b": "sbbt",
+   "ratio": 85.71428571428572,
+   "token_set_ratio": 85.71428571428571
+  },
+  {
+   "a": "",
+   "b": "",
+   "ratio": 100.0,
+   "token_set_ratio": 0.0
+  }
+ ]
+}

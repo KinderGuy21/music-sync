@@ -4,6 +4,11 @@ Sync playlists between **Spotify**, **YouTube Music** and **Apple Music**, in an
 Spotify → YouTube, YouTube → Apple, Apple → Spotify, and back again. Use it from the
 command line or a small local web page.
 
+There is also a **hosted web app** in [`web/`](web/README.md) for the most common case,
+copying a public Spotify playlist to YouTube Music: nothing to install, each visitor signs in
+with their own Google account, and it runs entirely in the browser (static site on Cloudflare
+Pages plus one tiny token function). This Python tool stays the full-featured version.
+
 - **One-way sync** copies a playlist to another service, creating it there or updating
   the existing one (only missing songs are added).
 - **Two-way sync** merges two playlists so each ends up with the other's songs, and can
@@ -172,6 +177,16 @@ Connect the services, pick **From** and **To** (the ⇆ button swaps them), load
 playlists (or paste a playlist link), choose one-way or two-way, and press **Sync**. The
 log streams live and each playlist gets a summary listing any songs that weren't found.
 
+## Hosted web app (`web/`)
+
+A separate, fully client-side app for one job: paste a public Spotify playlist link, sign in
+with Google, review the matches, and get the playlist in your YouTube Music. It reads Spotify
+the same anonymous way as `spotify_public.py` and matches songs with a TypeScript port of
+`matching.py` (checked against it by a parity test), but uses the official YouTube Data API
+instead of ytmusicapi. It doesn't share code or state with the Python tool. Setup, the
+Google client ID it needs, YouTube's API quota and deploying to Cloudflare Pages are in
+[web/README.md](web/README.md).
+
 ## How syncing works
 
 **Matching.** For each song not already in the target playlist:
@@ -220,6 +235,7 @@ music_sync/
     app.py            Flask app and JSON API
     templates/        pages, including the MusicKit JS sign-in
 tests/                pytest suite; the sync engine is tested against in-memory fake services
+web/                  the hosted, browser-only web app (TypeScript, Cloudflare Pages); see web/README.md
 ```
 
 Adding another service means implementing `Provider` (list playlists, read tracks, search,
@@ -230,7 +246,11 @@ create playlist, add/remove tracks) and registering it in `providers/__init__.py
 ```bash
 pip install -e ".[dev]"
 pytest
+cd web && npm install && npm test   # the hosted web app
 ```
+
+If you change `matching.py`, make the same change in `web/src/matching.ts` and regenerate the
+parity fixture with `python web/tests/make_parity.py` (needs `rapidfuzz`).
 
 ## Limits worth knowing
 
